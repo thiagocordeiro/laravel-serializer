@@ -19,7 +19,7 @@ jobs:
           php-version: '8.1'
 
       - name: Setup testing application
-        run: cd tests ; ./install.sh
+        run: cd tests ; ./install.sh ${{ github.sha }}
 
       - name: Check created files
         run: cd tests/blog ; php artisan test
