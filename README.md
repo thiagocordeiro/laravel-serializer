@@ -143,4 +143,5 @@ Feel free to open issues, suggest changes and submit PRs :)
 
 ### Supporting
 If you feel like supporting changes then you can send donations to the address below.
+
 Bitcoin Address: bc1qfyudlcxqnvqzxxgpvsfmadwudg4znk2z3asj9h
