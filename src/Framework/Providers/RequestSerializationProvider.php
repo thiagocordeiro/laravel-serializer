@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace LaravelSerializer\Framework\Providers;
 
@@ -21,6 +23,9 @@ class RequestSerializationProvider extends ServiceProvider
         $config = SerializerConfigLoader::create();
         $arraySerializer = new ArraySerializer($config->encoder(), $config->decoder());
         $jsonSerializer = new JsonSerializer($config->encoder(), $config->decoder());
+
+        $this->app->bind(ArraySerializer::class, fn() => $arraySerializer);
+        $this->app->bind(JsonSerializer::class, fn() => $jsonSerializer);
 
         foreach ($config->classes() as $class => $setup) {
             $this->app->bind($class, function () use ($class, $arraySerializer, $jsonSerializer) {
