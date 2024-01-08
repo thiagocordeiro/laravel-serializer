@@ -26,7 +26,7 @@ class SerializerConfigLoader implements ConfigLoader
     public static function create(): SerializerConfigLoader
     {
         return new SerializerConfigLoader(
-            classes: config('serializer') ?? [],
+            classes: require config_path('serializer.php') ?? [],
             cacheFolder: storage_path('/app/serializer'),
         );
     }
