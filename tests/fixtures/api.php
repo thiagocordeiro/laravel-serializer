@@ -11,3 +11,5 @@ Route::get('/', function () {
 Route::post('/', function (Foo $foo) {
     return $foo;
 });
+
+Route::post('/controller', 'App\Http\Controllers\FooBarController@index');

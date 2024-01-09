@@ -12,6 +12,7 @@ rm blog/routes/api.php
 cp fixtures/api.php blog/routes/
 cp fixtures/Foo.php blog/app/Models/
 cp fixtures/Type.php blog/app/Models/
+cp fixtures/FooBarController.php blog/app/Http/Controllers/
 cp fixtures/HttpSerializationTest.php blog/tests/Feature/
 cp fixtures/serializer.php blog/config/
 

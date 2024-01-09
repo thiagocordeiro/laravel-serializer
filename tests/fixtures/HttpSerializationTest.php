@@ -14,15 +14,27 @@ class HttpSerializationTest extends TestCase
         $response->assertStatus(200);
     }
 
-    public function testSerializeObjectInjecting(): void
+    public function testSerializeObjectInjectingCallable(): void
     {
-        $response = $this->postJson('/api', [
+        $response = $this->post('/api', [
             'a' => 'aaa',
             'b' => 'post',
             'type' => 'BBB',
         ]);
 
         $response->assertContent('{"a":"aaa","b":"post","type":"BBB"}');
+        $response->assertStatus(200);
+    }
+
+    public function testSerializeObjectInjectingController(): void
+    {
+        $response = $this->post('/api/controller', [
+            'a' => 'something',
+            'b' => 'something else',
+            'type' => 'AAA',
+        ]);
+
+        $response->assertContent('{"a":"something","b":"something else","type":"AAA"}');
         $response->assertStatus(200);
     }
 }
