@@ -37,4 +37,16 @@ class HttpSerializationTest extends TestCase
         $response->assertContent('{"a":"something","b":"something else","type":"AAA"}');
         $response->assertStatus(200);
     }
+
+    public function testWhenPayloadIsInvalidThenThrowBadRequest(): void
+    {
+        $response = $this->post('/api/controller', [
+            'a' => 'something',
+            'b' => 'something else',
+            'type' => 'YYY',
+        ]);
+
+        $response->assertJson(['message' => '"YYY" is not a valid backing value for enum "App\Models\Type"']);
+        $response->assertStatus(400);
+    }
 }
