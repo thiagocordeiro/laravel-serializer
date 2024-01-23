@@ -4,6 +4,7 @@ namespace LaravelSerializer\Framework\Dispatcher;
 
 use Illuminate\Http\JsonResponse;
 use Serializer\ArraySerializer;
+use Traversable;
 
 class SerializeResponseWrapper
 {
@@ -23,6 +24,20 @@ class SerializeResponseWrapper
     {
         $classes = config('serializer', []);
 
-        return is_object($response) && array_key_exists(get_class($response), $classes);
+        /**
+         * Laravel does not allow traversable responses, so we can assume it should be serialized
+         */
+        if ($response instanceof Traversable) {
+            return true;
+        }
+
+        /**
+         * if it is not an object then it is not something we can serialize
+         */
+        if (false === is_object($response)) {
+            return false;
+        }
+
+        return array_key_exists(get_class($response), $classes);
     }
 }

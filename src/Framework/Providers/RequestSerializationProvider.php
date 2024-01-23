@@ -4,12 +4,18 @@ declare(strict_types=1);
 
 namespace LaravelSerializer\Framework\Providers;
 
+use Carbon\Carbon;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Contracts\CallableDispatcher;
 use Illuminate\Routing\Contracts\ControllerDispatcher;
 use Illuminate\Support\ServiceProvider;
+use LaravelSerializer\Decoder\CarbonDecoder;
+use LaravelSerializer\Decoder\CarbonImmutableDecoder;
+use LaravelSerializer\Encoder\CarbonEncoder;
+use LaravelSerializer\Encoder\CarbonImmutableEncoder;
 use LaravelSerializer\Framework\Dispatcher\SerializerCallableDispatcher;
 use LaravelSerializer\Framework\Dispatcher\SerializerControllerDispatcher;
 use Serializer\ArraySerializer;
@@ -25,6 +31,16 @@ use Throwable;
 
 class RequestSerializationProvider extends ServiceProvider
 {
+    private const CUSTOM_ENCODERS = [
+        Carbon::class => CarbonEncoder::class,
+        CarbonImmutable::class => CarbonImmutableEncoder::class,
+    ];
+
+    private const CUSTOM_DECODERS = [
+        Carbon::class => CarbonDecoder::class,
+        CarbonImmutable::class => CarbonImmutableDecoder::class,
+    ];
+
     public function boot(): void
     {
         $config = __DIR__ . '/../../config/serializer.php';
@@ -33,9 +49,9 @@ class RequestSerializationProvider extends ServiceProvider
 
     public function register(): void
     {
-        $cache = storage_path('/app/serializer');
-        $encoder = new EncoderFactory(PipelineEncoderFileLoader::full($cache));
-        $decoder = new DecoderFactory(PipelineDecoderFileLoader::full($cache));
+        $cache = sprintf("%s/serializer", config('cache.stores.file.path'));
+        $encoder = new EncoderFactory(PipelineEncoderFileLoader::full($cache, self::CUSTOM_ENCODERS));
+        $decoder = new DecoderFactory(PipelineDecoderFileLoader::full($cache, self::CUSTOM_DECODERS));
 
         $arraySerializer = new ArraySerializer($encoder, $decoder);
         $jsonSerializer = new JsonSerializer($encoder, $decoder);
@@ -69,6 +85,7 @@ class RequestSerializationProvider extends ServiceProvider
 
     private function decodeRequest(string $class, ArraySerializer $arraySerializer, JsonSerializer $jsonSerializer)
     {
+        /** @var Request $request */
         $request = $this->app->get(Request::class);
 
         $data = match ($request->getContentTypeFormat()) {
@@ -76,6 +93,7 @@ class RequestSerializationProvider extends ServiceProvider
             default => (object)array_merge(
                 $request->query->all(),
                 $request->request->all(),
+                $request->route()->parameters
             ),
         };
 

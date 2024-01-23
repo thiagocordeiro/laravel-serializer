@@ -46,7 +46,7 @@ class HttpSerializationTest extends TestCase
             'type' => 'YYY',
         ]);
 
-        $response->assertJson(['message' => '"YYY" is not a valid backing value for enum "App\Models\Type"']);
+        $response->assertJson(['message' => 'Value "YYY" is not valid for Type(AAA, BBB)']);
         $response->assertStatus(400);
     }
 }
