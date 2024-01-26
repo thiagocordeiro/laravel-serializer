@@ -12,19 +12,25 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Contracts\CallableDispatcher;
 use Illuminate\Routing\Contracts\ControllerDispatcher;
 use Illuminate\Support\ServiceProvider;
+use JsonException;
 use LaravelSerializer\Decoder\CarbonDecoder;
 use LaravelSerializer\Decoder\CarbonImmutableDecoder;
 use LaravelSerializer\Encoder\CarbonEncoder;
 use LaravelSerializer\Encoder\CarbonImmutableEncoder;
 use LaravelSerializer\Framework\Dispatcher\SerializerCallableDispatcher;
 use LaravelSerializer\Framework\Dispatcher\SerializerControllerDispatcher;
+use Psr\Container\ContainerExceptionInterface;
+use Psr\Container\NotFoundExceptionInterface;
+use ReflectionException;
 use Serializer\ArraySerializer;
 use Serializer\Builder\Decoder\DecoderFactory;
 use Serializer\Builder\Decoder\FileLoader\PipelineDecoderFileLoader;
 use Serializer\Builder\Encoder\EncoderFactory;
 use Serializer\Builder\Encoder\FileLoader\PipelineEncoderFileLoader;
+use Serializer\Exception\ClassMustHaveAConstructor;
 use Serializer\Exception\MissingOrInvalidProperty;
 use Serializer\Exception\SerializerException;
+use Serializer\Exception\UnableToLoadOrCreateCacheClass;
 use Serializer\JsonSerializer;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
@@ -54,19 +60,18 @@ class RequestSerializationProvider extends ServiceProvider
         $decoder = new DecoderFactory(PipelineDecoderFileLoader::full($cache, self::CUSTOM_DECODERS));
 
         $arraySerializer = new ArraySerializer($encoder, $decoder);
-        $jsonSerializer = new JsonSerializer($encoder, $decoder);
 
         $this->app->bind(ArraySerializer::class, fn() => $arraySerializer);
-        $this->app->bind(JsonSerializer::class, fn() => $jsonSerializer);
+        $this->app->bind(JsonSerializer::class, fn() => new JsonSerializer($encoder, $decoder));
         $this->app->singleton(CallableDispatcher::class, SerializerCallableDispatcher::class);
         $this->app->singleton(ControllerDispatcher::class, SerializerControllerDispatcher::class);
 
         $classes = config('serializer', []);
 
         foreach ($classes as $class => $setup) {
-            $this->app->bind($class, function () use ($class, $arraySerializer, $jsonSerializer) {
+            $this->app->bind($class, function () use ($class, $arraySerializer) {
                 try {
-                    return $this->decodeRequest($class, $arraySerializer, $jsonSerializer);
+                    return $this->decodeRequest($class, $arraySerializer);
                 } catch (MissingOrInvalidProperty $e) {
                     throw $this->createBadRequest($e->getMessage());
                 } catch (SerializerException $e) {
@@ -83,26 +88,34 @@ class RequestSerializationProvider extends ServiceProvider
         }
     }
 
-    private function decodeRequest(string $class, ArraySerializer $arraySerializer, JsonSerializer $jsonSerializer)
+    /**
+     * @template T of object
+     * @param class-string<T> $class
+     * @param ArraySerializer $arraySerializer
+     * @return T
+     *
+     * @throws MissingOrInvalidProperty
+     * @throws SerializerException
+     * @throws JsonException
+     * @throws ContainerExceptionInterface
+     * @throws NotFoundExceptionInterface
+     * @throws ReflectionException
+     * @throws ClassMustHaveAConstructor
+     * @throws UnableToLoadOrCreateCacheClass
+     */
+    private function decodeRequest(string $class, ArraySerializer $arraySerializer)
     {
         /** @var Request $request */
         $request = $this->app->get(Request::class);
 
-        $data = match ($request->getContentTypeFormat()) {
-            'json' => (string)$request->getContent(),
-            default => (object)array_merge(
-                $request->query->all(),
-                $request->request->all(),
-                $request->route()->parameters
-            ),
-        };
+        $data = array_merge(
+            $request->query->all(),
+            $request->request->all(),
+            $request->route()->parameters,
+            $request->getContentTypeFormat() === 'json' ? json_decode((string) $request->getContent(), true) : [],
+        );
 
-        $serializer = match ($request->getContentTypeFormat()) {
-            'json' => $jsonSerializer,
-            default => $arraySerializer,
-        };
-
-        return $serializer->deserialize($data, $class);
+        return $arraySerializer->deserialize($data, $class);
     }
 
     private function createBadRequest(string $message): HttpResponseException
