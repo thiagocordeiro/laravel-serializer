@@ -22,7 +22,7 @@ class SerializeResponseWrapper
 
     private function isSerializable($response): bool
     {
-        $classes = config('serializer', []);
+        $classes = config('serializer.classes', []);
 
         /**
          * Laravel does not allow traversable responses, so we can assume it should be serialized

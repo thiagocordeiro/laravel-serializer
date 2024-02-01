@@ -55,7 +55,7 @@ class RequestSerializationProvider extends ServiceProvider
 
     public function register(): void
     {
-        $cache = sprintf("%s/serializer", config('cache.stores.file.path'));
+        $cache = sprintf("%s/serializer", config('serializer.cache'));
         $encoder = new EncoderFactory(PipelineEncoderFileLoader::full($cache, self::CUSTOM_ENCODERS));
         $decoder = new DecoderFactory(PipelineDecoderFileLoader::full($cache, self::CUSTOM_DECODERS));
 
@@ -66,7 +66,7 @@ class RequestSerializationProvider extends ServiceProvider
         $this->app->singleton(CallableDispatcher::class, SerializerCallableDispatcher::class);
         $this->app->singleton(ControllerDispatcher::class, SerializerControllerDispatcher::class);
 
-        $classes = config('serializer', []);
+        $classes = config('serializer.classes', []);
 
         foreach ($classes as $class => $setup) {
             $this->app->bind($class, function () use ($class, $arraySerializer) {

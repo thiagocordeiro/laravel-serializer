@@ -1,5 +1,8 @@
 <?php declare(strict_types=1);
 
 return [
-    App\Models\Foo::class => [],
+    'cache' => config('cache.stores.file.path'),
+    'classes' => [
+        App\Models\Foo::class => [],
+    ],
 ];
