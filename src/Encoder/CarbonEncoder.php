@@ -16,6 +16,6 @@ class CarbonEncoder extends Encoder
      */
     public function encode(object $object): array|string|int|float|bool|null
     {
-        return $object->format(DateTimeInterface::ISO8601);
+        return $object->format(DateTimeInterface::ATOM);
     }
 }
