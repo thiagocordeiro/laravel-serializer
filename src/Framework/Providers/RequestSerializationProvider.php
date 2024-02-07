@@ -12,6 +12,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Contracts\CallableDispatcher;
 use Illuminate\Routing\Contracts\ControllerDispatcher;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 use JsonException;
 use LaravelSerializer\Decoder\CarbonDecoder;
@@ -96,6 +98,8 @@ class RequestSerializationProvider extends ServiceProvider
         $this->app->bind(JsonSerializer::class, fn() => new JsonSerializer($encoder, $decoder));
         $this->app->singleton(CallableDispatcher::class, SerializerCallableDispatcher::class);
         $this->app->singleton(ControllerDispatcher::class, SerializerControllerDispatcher::class);
+
+        $this->registerEvents();
     }
 
     /**
@@ -133,5 +137,10 @@ class RequestSerializationProvider extends ServiceProvider
         return new HttpResponseException(
             response: new JsonResponse(['message' => $message], Response::HTTP_BAD_REQUEST),
         );
+    }
+
+    private function registerEvents(): void
+    {
+        Event::listen('cache:cleared', fn () => Artisan::call('serializer:clear'));
     }
 }
