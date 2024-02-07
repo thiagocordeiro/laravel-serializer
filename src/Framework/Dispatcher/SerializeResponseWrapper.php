@@ -27,7 +27,7 @@ class SerializeResponseWrapper
         /**
          * Laravel does not allow traversable responses, so we can assume it should be serialized
          */
-        if ($response instanceof Traversable) {
+        if (is_iterable($response)) {
             return true;
         }
 

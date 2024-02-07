@@ -6,6 +6,7 @@ namespace LaravelSerializer\Framework\Providers;
 
 use Carbon\Carbon;
 use Carbon\CarbonImmutable;
+use Illuminate\Foundation\Application;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -55,23 +56,23 @@ class RequestSerializationProvider extends ServiceProvider
 
     public function register(): void
     {
-        $cache = sprintf("%s/serializer", config('serializer.cache'));
-        $encoder = new EncoderFactory(PipelineEncoderFileLoader::full($cache, self::CUSTOM_ENCODERS));
-        $decoder = new DecoderFactory(PipelineDecoderFileLoader::full($cache, self::CUSTOM_DECODERS));
-
-        $arraySerializer = new ArraySerializer($encoder, $decoder);
-
-        $this->app->bind(ArraySerializer::class, fn() => $arraySerializer);
-        $this->app->bind(JsonSerializer::class, fn() => new JsonSerializer($encoder, $decoder));
-        $this->app->singleton(CallableDispatcher::class, SerializerCallableDispatcher::class);
-        $this->app->singleton(ControllerDispatcher::class, SerializerControllerDispatcher::class);
-
         $classes = config('serializer.classes', []);
 
+        $encoders = self::CUSTOM_ENCODERS;
+        $decoders = self::CUSTOM_DECODERS;
+
         foreach ($classes as $class => $setup) {
-            $this->app->bind($class, function () use ($class, $arraySerializer) {
+            if ($setup['encoder'] ?? null) {
+                $encoders[$class] = $setup['encoder'];
+            }
+
+            if ($setup['decoder'] ?? null) {
+                $encoders[$class] = $setup['decoder'];
+            }
+
+            $this->app->bind($class, function (Application $app) use ($class) {
                 try {
-                    return $this->decodeRequest($class, $arraySerializer);
+                    return $this->decodeRequest($class, $app->get(ArraySerializer::class));
                 } catch (MissingOrInvalidProperty $e) {
                     throw $this->createBadRequest($e->getMessage());
                 } catch (SerializerException $e) {
@@ -86,6 +87,15 @@ class RequestSerializationProvider extends ServiceProvider
                 }
             });
         }
+
+        $cache = sprintf("%s/serializer", config('serializer.cache'));
+        $encoder = new EncoderFactory(PipelineEncoderFileLoader::full($cache, $encoders));
+        $decoder = new DecoderFactory(PipelineDecoderFileLoader::full($cache, $decoders));
+
+        $this->app->bind(ArraySerializer::class, fn() => new ArraySerializer($encoder, $decoder));
+        $this->app->bind(JsonSerializer::class, fn() => new JsonSerializer($encoder, $decoder));
+        $this->app->singleton(CallableDispatcher::class, SerializerCallableDispatcher::class);
+        $this->app->singleton(ControllerDispatcher::class, SerializerControllerDispatcher::class);
     }
 
     /**
