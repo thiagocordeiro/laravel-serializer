@@ -20,6 +20,7 @@ use LaravelSerializer\Decoder\CarbonDecoder;
 use LaravelSerializer\Decoder\CarbonImmutableDecoder;
 use LaravelSerializer\Encoder\CarbonEncoder;
 use LaravelSerializer\Encoder\CarbonImmutableEncoder;
+use LaravelSerializer\Framework\Commands\SerializerClearCommand;
 use LaravelSerializer\Framework\Dispatcher\SerializerCallableDispatcher;
 use LaravelSerializer\Framework\Dispatcher\SerializerControllerDispatcher;
 use Psr\Container\ContainerExceptionInterface;
@@ -99,6 +100,7 @@ class RequestSerializationProvider extends ServiceProvider
         $this->app->singleton(CallableDispatcher::class, SerializerCallableDispatcher::class);
         $this->app->singleton(ControllerDispatcher::class, SerializerControllerDispatcher::class);
 
+        $this->registerCommands();
         $this->registerEvents();
     }
 
@@ -158,6 +160,13 @@ class RequestSerializationProvider extends ServiceProvider
         return new HttpResponseException(
             response: new JsonResponse(['message' => $message], Response::HTTP_BAD_REQUEST),
         );
+    }
+
+    private function registerCommands(): void
+    {
+        $this->commands([
+            SerializerClearCommand::class,
+        ]);
     }
 
     private function registerEvents(): void
