@@ -3,18 +3,25 @@
 namespace LaravelSerializer\Framework\Dispatcher;
 
 use Illuminate\Http\JsonResponse;
+use LaravelSerializer\Framework\SerializerResponse;
 use Serializer\ArraySerializer;
-use Traversable;
 
-class SerializeResponseWrapper
+readonly class SerializeResponseWrapper
 {
     public function __construct(private ArraySerializer $serializer)
     {
-        // promoted
     }
 
     public function respond($response)
     {
+        if ($response instanceof SerializerResponse) {
+            return new JsonResponse(
+                data: $this->serializer->serialize($response->data),
+                status: $response->status,
+                headers: $response->headers,
+            );
+        }
+
         return $this->isSerializable($response)
             ? new JsonResponse($this->serializer->serialize($response))
             : $response;
