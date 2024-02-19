@@ -16,9 +16,9 @@ readonly class SerializeResponseWrapper
     {
         if ($response instanceof SerializerResponse) {
             return new JsonResponse(
-                data: $this->serializer->serialize($response->data),
-                status: $response->status,
-                headers: $response->headers,
+                data: $this->serializer->serialize($response->serializable),
+                status: $response->getStatusCode(),
+                headers: $response->headers?->all() ?: [],
             );
         }
 

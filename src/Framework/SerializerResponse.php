@@ -2,12 +2,15 @@
 
 namespace LaravelSerializer\Framework;
 
-readonly class SerializerResponse
+use Illuminate\Http\JsonResponse;
+
+class SerializerResponse extends JsonResponse
 {
     public function __construct(
-        public object $data,
-        public int $status = 200,
-        public array $headers = [],
+        public readonly mixed $serializable,
+        $status = 200,
+        $headers = [],
     ) {
+        parent::__construct($serializable, $status, $headers);
     }
 }
