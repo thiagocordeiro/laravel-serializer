@@ -70,7 +70,7 @@ class RequestSerializationProvider extends ServiceProvider
             }
 
             if ($setup['decoder'] ?? null) {
-                $encoders[$class] = $setup['decoder'];
+                $decoders[$class] = $setup['decoder'];
             }
 
             $this->app->bind($class, function (Application $app) use ($class) {
