@@ -8,7 +8,7 @@ class HttpSerializationTest extends TestCase
 {
     public function testSerializeGetResponse(): void
     {
-        $response = $this->get('/api');
+        $response = $this->get('/');
 
         $response->assertContent('{"a":"aaa","b":"get","type":"AAA"}');
         $response->assertStatus(200);
@@ -16,7 +16,7 @@ class HttpSerializationTest extends TestCase
 
     public function testSerializeObjectInjectingCallable(): void
     {
-        $response = $this->post('/api', [
+        $response = $this->post('/', [
             'a' => 'aaa',
             'b' => 'post',
             'type' => 'BBB',
@@ -28,7 +28,7 @@ class HttpSerializationTest extends TestCase
 
     public function testSerializeObjectInjectingController(): void
     {
-        $response = $this->post('/api/controller', [
+        $response = $this->post('/controller', [
             'a' => 'something',
             'b' => 'something else',
             'type' => 'AAA',
@@ -40,7 +40,7 @@ class HttpSerializationTest extends TestCase
 
     public function testWhenPayloadIsInvalidThenThrowBadRequest(): void
     {
-        $response = $this->post('/api/controller', [
+        $response = $this->post('/controller', [
             'a' => 'something',
             'b' => 'something else',
             'type' => 'YYY',

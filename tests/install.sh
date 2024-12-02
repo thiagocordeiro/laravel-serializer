@@ -8,8 +8,8 @@ php fix-files.php
 
 composer require thiagocordeiro/laravel-serializer:dev-main#$COMMIT_HASH -d blog/
 
-rm blog/routes/api.php
-cp fixtures/api.php blog/routes/
+rm blog/routes/web.php
+cp fixtures/web.php blog/routes/
 cp fixtures/Foo.php blog/app/Models/
 cp fixtures/Type.php blog/app/Models/
 cp fixtures/FooBarController.php blog/app/Http/Controllers/
