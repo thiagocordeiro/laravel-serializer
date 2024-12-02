@@ -128,31 +128,9 @@ class RequestSerializationProvider extends ServiceProvider
             $request->query->all(),
             $request->request->all(),
             $request->route()->parameters,
-            $this->getRequestContent($request),
         );
 
         return $arraySerializer->deserialize($data, $class);
-    }
-
-    /**
-     * @param Request $request
-     * @return array<string, mixed>
-     */
-    private function getRequestContent(Request $request): array
-    {
-        if ($request->getContentTypeFormat() === 'json') {
-            $content = json_decode((string) $request->getContent(), true);
-
-            // Some HTTP Clients like Axios always send the Content-Type header (even in a GET request) by design.
-            // This means that the request content will be an empty string, and json_decode will return null.
-            if (is_null($content)) {
-                return [];
-            }
-
-            return $content;
-        }
-
-        return [];
     }
 
     private function createBadRequest(string $message): HttpResponseException
@@ -171,6 +149,6 @@ class RequestSerializationProvider extends ServiceProvider
 
     private function registerEvents(): void
     {
-        Event::listen('cache:cleared', fn () => Artisan::call('serializer:clear'));
+        Event::listen('cache:cleared', fn() => Artisan::call('serializer:clear'));
     }
 }
