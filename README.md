@@ -132,7 +132,10 @@ use App\Order;
 
 return [
     ...
-    Order::class => [],
+    Order::class => [
+        // 'encoder' => app(MyOrderCustomerEncoder::class),
+        // 'decoder' => app(MyOrderCustomerDecorder::class),
+    ],
 ];
 ```
 
