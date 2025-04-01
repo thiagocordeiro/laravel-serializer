@@ -58,6 +58,26 @@ return [
 
 ### Usage
 Say you have an `App\Order` object and you want it to be serialized:
+
+###### With public properties
+```php
+<?php
+
+namespace App;
+
+readonly class Order
+{
+    public function __construct(
+        public int $customerId,
+        public Address $delivery,
+        public DateTime $placedAt,
+        public ProductCollection $products,
+    ) {
+    }
+}
+```
+
+###### Without private properties
 ```php
 <?php
 
